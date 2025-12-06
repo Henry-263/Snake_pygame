@@ -154,29 +154,46 @@ def juego(ventana, tamMapa, obstaculos, numManzanas):
         manzanas = [[random.randint(0, tamMapa - 1), random.randint(0, tamMapa - 1)] for z in range(numManzanas)]
     direccion = ""
 
+    event_list = []
     while corriendo:
 
-        cambio_direccion = True
         ventana.fill((100, 100, 100))
 
         for evento in pygame.event.get():
             if evento.type == pygame.KEYDOWN:
-                if cambio_direccion:
-                    if (evento.key == pygame.K_w or evento.key == pygame.K_UP) and direccion != "sur":
-                        direccion = "norte"
-                        cambio_direccion = False
-                    elif (evento.key == pygame.K_s or evento.key == pygame.K_DOWN) and direccion != "norte":
-                        direccion = "sur"
-                        cambio_direccion = False
-                    elif (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and direccion != "oeste":
-                        direccion = "este"
-                        cambio_direccion = False
-                    elif (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and direccion != "este":
-                        direccion = "oeste"
-                        cambio_direccion = False
+                if len(event_list) < 3:
+                    if len(event_list) > 0:
+                        if (evento.key == pygame.K_w or evento.key == pygame.K_UP) and event_list[len(event_list)-1] != "sur":
+                            event_list.append("norte")
+
+                        if (evento.key == pygame.K_s or evento.key == pygame.K_DOWN) and event_list[len(event_list)-1] != "norte":
+                            event_list.append("sur")
+
+                        if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and event_list[len(event_list)-1] != "oeste":
+                            event_list.append("este")
+
+                        if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and event_list[len(event_list)-1] != "este":
+                            event_list.append("oeste")
+                    else:
+                        if (evento.key == pygame.K_w or evento.key == pygame.K_UP) and direccion != "sur":
+                            event_list.append("norte")
+
+                        if (evento.key == pygame.K_s or evento.key == pygame.K_DOWN) and direccion != "norte":
+                            event_list.append("sur")
+
+                        if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and direccion != "oeste":
+                            event_list.append("este")
+
+                        if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and direccion != "este":
+                            event_list.append("oeste")
+
             if evento.type == pygame.QUIT:
                 corriendo = False
                 return 0
+
+        if len(event_list) > 0:
+            direccion = event_list.pop(0)
+
 
         dibujar(posUsuario, manzanas, ventana, rojo, negro, verde, violeta, tamMapa, obstaculos, manzanasEnvenenadas)
         corriendo = chocarBorde(posUsuario, corriendo, direccion, tamMapa, obstaculos, manzanasEnvenenadas)
