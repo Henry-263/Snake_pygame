@@ -132,7 +132,7 @@ def chocarBorde(posUsuario, corriendo, direccion, tamMapa, obstaculos, muros):
     return corriendo
 
 
-def juego(ventana, tamMapa, obstaculos, numManzanas):
+def juego(ventana, tamMapa, obstaculos, numManzanas, velocidad):
     font = pygame.font.Font(None, 40)
 
     rojo = (255, 0, 0)
@@ -205,7 +205,7 @@ def juego(ventana, tamMapa, obstaculos, numManzanas):
 
         pygame.display.flip()
 
-        reloj.tick(7)
+        reloj.tick(velocidad)
     guardarPartida(cabeza)
     return 1
 
@@ -225,6 +225,8 @@ def menu(ventana):
     obstaculos = "<Sin Obstáculos>"
     seleccionado = 1
     elegirManzanas = 1
+    velocidades = {"Lento":5, "Medio":7, "Rapido":9}
+    velocidad = "Medio"
     while corriendo:
 
         ventana.fill(negro)
@@ -233,11 +235,11 @@ def menu(ventana):
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_RETURN and seleccionado == 1:
                     corriendo = False
-                    return 1, elegir, obstaculos, elegirManzanas
+                    return 1, elegir, obstaculos, elegirManzanas, velocidades[velocidad]
 
-                if evento.key == pygame.K_RETURN and seleccionado == 5:
+                if evento.key == pygame.K_RETURN and seleccionado == 6:
                     corriendo = False
-                    return 2, elegir, obstaculos, elegirManzanas
+                    return 2, elegir, obstaculos, elegirManzanas, velocidades[velocidad]
                 if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 2:
                     if elegir == "<Pequeño>":
                         elegir = "<Mediano>"
@@ -275,13 +277,28 @@ def menu(ventana):
                     else:
                         elegirManzanas = 1
 
+                if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 5:
+                    if velocidad == "Medio":
+                        velocidad = "Rapido"
+                    elif velocidad == "Rapido":
+                        velocidad = "Lento"
+                    else:
+                        velocidad = "Medio"
+                if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and seleccionado == 5:
+                    if velocidad == "Medio":
+                        velocidad = "Lento"
+                    elif velocidad == "Lento":
+                        velocidad = "Rapido"
+                    else:
+                        velocidad = "Medio"
+
                 if evento.key in (pygame.K_UP, pygame.K_w):
                     if seleccionado > 1:
                         seleccionado -= 1
                     else:
-                        seleccionado = 5
+                        seleccionado = 6
                 if evento.key in (pygame.K_DOWN, pygame.K_s):
-                    if seleccionado < 5:
+                    if seleccionado < 6:
                         seleccionado += 1
                     else:
                         seleccionado = 1
@@ -314,6 +331,11 @@ def menu(ventana):
             texto_Manzanas = font.render(f"Manzanas: {elegirManzanas}", True, morado)
 
         if seleccionado == 5:
+            texto_Velocidad = font.render(f"Velocidad: {velocidad}", True, morado_claro)
+        else:
+            texto_Velocidad = font.render(f"Velocidad: {velocidad}", True, morado)
+
+        if seleccionado == 6:
             texto_salir = font.render(salir, True, morado_claro)
         else:
             texto_salir = font.render(salir, True, morado)
@@ -321,7 +343,8 @@ def menu(ventana):
         snake = font.render("Snake", True, verde)
         ventana.blit(snake, (260, 20))
         ventana.blit(texto_jugar, (250, 200))
-        ventana.blit(texto_salir, (250, 400))
+        ventana.blit(texto_Velocidad, (180, 400))
+        ventana.blit(texto_salir, (250, 450))
         ventana.blit(texto_Manzanas, (220, 350))
         ventana.blit(texto_elegir_tam, (230, 250))
         ventana.blit(texto_elegir_obst, (180, 300))
@@ -414,7 +437,7 @@ def main():
 
     opcion = 1
     while opcion == 1:
-        opcion, elegir, obstaculos, elegirManzanas = menu(ventana)
+        opcion, elegir, obstaculos, elegirManzanas, velocidad = menu(ventana)
         if opcion == 1:
             if elegir == "<Pequeño>":
                 tamMapa = 10
@@ -423,7 +446,7 @@ def main():
             else:
                 tamMapa = 20
 
-            opcion = juego(ventana, tamMapa, obstaculos, elegirManzanas)
+            opcion = juego(ventana, tamMapa, obstaculos, elegirManzanas, velocidad)
             if opcion == 1:
                 opcion = perder(ventana,tamMapa)
 
