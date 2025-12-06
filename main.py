@@ -1,6 +1,6 @@
 import pygame
 import random
-
+import json
 
 def dibujar(posUsuario, manzanas, ventana, rojo, negro, verde, violeta, tamMapa, obstaculos, muros):
     x, y = 0, 0
@@ -206,7 +206,7 @@ def juego(ventana, tamMapa, obstaculos, numManzanas, velocidad):
         pygame.display.flip()
 
         reloj.tick(velocidad)
-    guardarPartida(cabeza)
+    guardarPartida(tamMapa, obstaculos, numManzanas, velocidad, cabeza)
     return 1
 
 
@@ -221,8 +221,9 @@ def menu(ventana):
 
     reloj = pygame.time.Clock()
     corriendo = True
+    elegir_tam = {"<Pequeño>":10, "<Mediano>":15, "<Grande>":20}
     elegir = "<Pequeño>"
-    obstaculos = "<Sin Obstáculos>"
+    obstaculos = "<Sin Obstaculos>"
     seleccionado = 1
     elegirManzanas = 1
     velocidades = {"Lento":5, "Medio":7, "Rapido":9}
@@ -235,11 +236,11 @@ def menu(ventana):
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_RETURN and seleccionado == 1:
                     corriendo = False
-                    return 1, elegir, obstaculos, elegirManzanas, velocidades[velocidad]
+                    return 1, elegir_tam[elegir], obstaculos, elegirManzanas, velocidades[velocidad]
 
                 if evento.key == pygame.K_RETURN and seleccionado == 6:
                     corriendo = False
-                    return 2, elegir, obstaculos, elegirManzanas, velocidades[velocidad]
+                    return 2, elegir_tam[elegir], obstaculos, elegirManzanas, velocidades[velocidad]
                 if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 2:
                     if elegir == "<Pequeño>":
                         elegir = "<Mediano>"
@@ -257,10 +258,10 @@ def menu(ventana):
                         elegir = "<Mediano>"
 
                 if evento.key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_a, pygame.K_d) and seleccionado == 3:
-                    if obstaculos == "<Con Obstáculos>":
-                        obstaculos = "<Sin Obstáculos>"
+                    if obstaculos == "<Con Obstaculos>":
+                        obstaculos = "<Sin Obstaculos>"
                     else:
-                        obstaculos = "<Con Obstáculos>"
+                        obstaculos = "<Con Obstaculos>"
 
                 if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and seleccionado == 4:
                     if elegirManzanas == 1:
@@ -353,11 +354,11 @@ def menu(ventana):
         reloj.tick(60)
 
 
-def perder(ventana,tamMapa):
+def perder(ventana,tamMapa, obstaculos, numManzanas, velocidad):
     font = pygame.font.Font(None, 40)
 
-    gris = (100, 100, 100)
-    rojo = (255, 0, 0)
+    clave = f"{tamMapa}:{obstaculos}:{numManzanas}:{velocidad}"
+
     negro = (0, 0, 0)
     verde = (0, 255, 0)
     morado = (80, 40, 130)
@@ -378,7 +379,7 @@ def perder(ventana,tamMapa):
             if evento.type == pygame.QUIT:
                 corriendo = False
                 return 0
-        partidas, record, manzana = leer_cositas()
+        partidas, record, manzana = leer_cositas(clave)
         if manzana == (tamMapa ** 2):
             perder = "Has ganado!!!"
         else:
@@ -387,11 +388,20 @@ def perder(ventana,tamMapa):
         par = "Partidas jugadas: " + str(partidas)
         rec = "Record personal: " + str(record)
         manza = "Manzanas comidas: " + str(manzana)
+        mapas = {10:"Pequeño",15:"Mediano",20:"grande"}
+        veloz = {5:"Lento", 7:"Medio",9:"Rapido"}
+
+        modo1 = f"Mapa:{mapas[tamMapa]} {obstaculos}"
+        modo2 = f"Manzanas:{numManzanas} Velocidad:{veloz[velocidad]}"
+        modo_juego1 = font.render(modo1, True, verde)
+        modo_juego2 = font.render(modo2, True, verde)
         texto = font.render(perder, True, morado)
         texto2 = font.render(jugar, True, morado)
         texto3 = font.render(par, True, verde)
         texto4 = font.render(manza, True, verde)
         texto5 = font.render(rec, True, verde)
+        ventana.blit(modo_juego1, (80, 210))
+        ventana.blit(modo_juego2, (80, 240))
         ventana.blit(texto, (210, 20))
         ventana.blit(texto2, (90, 150))
         ventana.blit(texto3, (160, 280))
@@ -401,54 +411,51 @@ def perder(ventana,tamMapa):
         pygame.display.flip()
         reloj.tick(60)
 
-def guardarPartida(manzanas):
+def guardarPartida(tamMapa, obstaculos, numManzanas, velocidad, manzanas_comidas):
+    clave = f"{tamMapa}:{obstaculos}:{numManzanas}:{velocidad}"
     try:
-        with open("estadisticas.txt", "r+") as f:
-            lineas = f.readlines()
+        with open("estadisticas.json", "r") as f:
+            estadisticas = json.load(f)
 
-            partidas = int(lineas[0])
-            record = int(lineas[1])
-            partidas += 1
-            if manzanas > record:
-                record = manzanas
+            if clave in estadisticas:
+                record = estadisticas[clave][2]
+                if manzanas_comidas > record:
+                    record = manzanas_comidas
+                estadisticas[clave] = [estadisticas[clave][0]+1, manzanas_comidas, record]
+            else:
+                estadisticas.update({clave:[1,manzanas_comidas,manzanas_comidas]})
 
-            f.seek(0)
-            f.writelines([str(partidas) + "\n" + str(record) + "\n" + str(manzanas)])
-            f.truncate()
+            with open("estadisticas.json", "w") as f:
+                json.dump(estadisticas, f, indent=4)
+
     except FileNotFoundError:
-        with open("estadisticas.txt", "w") as f:
-            f.writelines(["1\n" + str(manzanas) + "\n" + str(manzanas)])
+        with open("estadisticas.json", "w") as f:
+            estadisticas = {clave:[1,manzanas_comidas,manzanas_comidas]}
+            json.dump(estadisticas, f, indent=4)
 
 
-def leer_cositas():
-    with open("estadisticas.txt", "r") as f:
-        lineas = f.readlines()
-    partidas = int(lineas[0])
-    record = int(lineas[1])
-    manza = int(lineas[2])
-    return partidas, record, manza
+def leer_cositas(clave):
+    with open("estadisticas.json", "r") as f:
+        estadisticas = json.load(f)
+        partidas = estadisticas[clave][0]
+        record = estadisticas[clave][2]
+        manza = estadisticas[clave][1]
+        return partidas, record, manza
 
 
 def main():
     pygame.init()
     ANCHO, ALTO = 600, 600
     ventana = pygame.display.set_mode((ANCHO, ALTO))
-    pygame.display.set_caption("Snake pochete manelillo")
+    pygame.display.set_caption("Pygame Snake")
 
     opcion = 1
     while opcion == 1:
         opcion, elegir, obstaculos, elegirManzanas, velocidad = menu(ventana)
         if opcion == 1:
-            if elegir == "<Pequeño>":
-                tamMapa = 10
-            elif elegir == "<Mediano>":
-                tamMapa = 15
-            else:
-                tamMapa = 20
-
-            opcion = juego(ventana, tamMapa, obstaculos, elegirManzanas, velocidad)
+            opcion = juego(ventana, elegir, obstaculos, elegirManzanas, velocidad)
             if opcion == 1:
-                opcion = perder(ventana,tamMapa)
+                opcion = perder(ventana,elegir,obstaculos, elegirManzanas, velocidad)
 
     pygame.quit()
 main()
