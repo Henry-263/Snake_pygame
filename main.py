@@ -20,7 +20,7 @@ def dibujar(posUsuario, manzanas, ventana, rojo, negro, verde, violeta, tamMapa,
             elif [e, i] in manzanas:
                 pygame.draw.rect(ventana, rojo, (x, y, tamPixel, tamPixel))
                 pygame.draw.rect(ventana, rojo_oscuro, (x, y, tamPixel, tamPixel), 6)
-            elif (obstaculos == "<Con Obstáculos>") and ([e, i] in muros):
+            elif (obstaculos == "<Con Obstaculos>") and ([e, i] in muros):
                 pygame.draw.rect(ventana, violeta, (x, y, tamPixel, tamPixel))
                 pygame.draw.rect(ventana, violeta_oscuro, (x, y, tamPixel, tamPixel), 6)
             else:
@@ -96,9 +96,9 @@ def mover(posUsuario, manzanas, cabeza, direccion, tamMapa, obstaculos, manzanas
             j -= 1
 
     if posUsuario[0] in manzanas:
-        manzana, posUsuario, cabeza = comer_manzana(cabeza,posUsuario,manzanas,manzanasEnvenenadas,tamMapa)
+        manzanas, posUsuario, cabeza = comer_manzana(cabeza,posUsuario,manzanas,manzanasEnvenenadas,tamMapa)
 
-        if (obstaculos == "<Con Obstáculos>") and (cabeza % 2 == 0):
+        if (obstaculos == "<Con Obstaculos>") and (cabeza % 2 == 0):
             manzanasEnvenenadas = generar_manzanaEnvenenada(tamMapa,posUsuario, manzanas, manzanasEnvenenadas)
 
     if direccion == "norte":
@@ -125,7 +125,7 @@ def chocarBorde(posUsuario, corriendo, direccion, tamMapa, obstaculos, muros):
     elif len(posUsuario) > 1:
         if posUsuario[0] in posUsuario[1:]:
             corriendo = False
-    if (obstaculos == "<Con Obstáculos>") and (posUsuario[0] in muros):
+    if (obstaculos == "<Con Obstaculos>") and (posUsuario[0] in muros):
         corriendo = False
     if len(posUsuario) == tamMapa ** 2:
         corriendo = False
@@ -238,9 +238,14 @@ def menu(ventana):
                     corriendo = False
                     return 1, elegir_tam[elegir], obstaculos, elegirManzanas, velocidades[velocidad]
 
-                if evento.key == pygame.K_RETURN and seleccionado == 6:
+                if evento.key == pygame.K_RETURN and seleccionado == 7:
                     corriendo = False
                     return 2, elegir_tam[elegir], obstaculos, elegirManzanas, velocidades[velocidad]
+                if evento.key == pygame.K_RETURN and seleccionado == 6:
+                    est = ver_estadisticas(ventana)
+                    if est == 2:
+                        return 2, elegir_tam[elegir], obstaculos, elegirManzanas, velocidades[velocidad]
+
                 if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 2:
                     if elegir == "<Pequeño>":
                         elegir = "<Mediano>"
@@ -297,9 +302,9 @@ def menu(ventana):
                     if seleccionado > 1:
                         seleccionado -= 1
                     else:
-                        seleccionado = 6
+                        seleccionado = 7
                 if evento.key in (pygame.K_DOWN, pygame.K_s):
-                    if seleccionado < 6:
+                    if seleccionado < 7:
                         seleccionado += 1
                     else:
                         seleccionado = 1
@@ -336,19 +341,25 @@ def menu(ventana):
         else:
             texto_Velocidad = font.render(f"Velocidad: {velocidad}", True, morado)
 
-        if seleccionado == 6:
+        if seleccionado == 7:
             texto_salir = font.render(salir, True, morado_claro)
         else:
             texto_salir = font.render(salir, True, morado)
+
+        if seleccionado == 6:
+            texto_estadisticas = font.render("Estadisticas", True, morado_claro)
+        else:
+            texto_estadisticas = font.render("Estadisticas", True, morado)
 
         snake = font.render("Snake", True, verde)
         ventana.blit(snake, (260, 20))
         ventana.blit(texto_jugar, (250, 200))
         ventana.blit(texto_Velocidad, (180, 400))
-        ventana.blit(texto_salir, (250, 450))
+        ventana.blit(texto_salir, (250, 500))
         ventana.blit(texto_Manzanas, (220, 350))
         ventana.blit(texto_elegir_tam, (230, 250))
         ventana.blit(texto_elegir_obst, (180, 300))
+        ventana.blit(texto_estadisticas, (220, 450))
 
         pygame.display.flip()
         reloj.tick(60)
@@ -441,6 +452,165 @@ def leer_cositas(clave):
         record = estadisticas[clave][2]
         manza = estadisticas[clave][1]
         return partidas, record, manza
+
+def ver_estadisticas(ventana):
+    font = pygame.font.Font(None, 40)
+    gris = (100, 100, 100)
+    rojo = (255, 0, 0)
+    negro = (0, 0, 0)
+    verde = (0, 255, 0)
+    morado = (80, 40, 130)
+    morado_claro = (105, 60, 160)
+
+    reloj = pygame.time.Clock()
+    corriendo = True
+    elegir = "<Pequeño>"
+    obstaculos = "<Sin Obstaculos>"
+    seleccionado = 1
+    elegirManzanas = 1
+    velocidad = "Medio"
+    tamMapa = {"<Pequeño>":10, "<Mediano>":15, "<Grande>":20}
+    velocidades = {"Lento":5, "Medio":7, "Rapido":9}
+    while corriendo:
+
+        ventana.fill(negro)
+        clave = f"{tamMapa[elegir]}:{obstaculos}:{elegirManzanas}:{velocidades[velocidad]}"
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.KEYDOWN:
+
+                if evento.key == pygame.K_RETURN and seleccionado == 5:
+                    return 1
+                if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 1:
+                    if elegir == "<Pequeño>":
+                        elegir = "<Mediano>"
+                    elif elegir == "<Mediano>":
+                        elegir = "<Grande>"
+                    else:
+                        elegir = "<Pequeño>"
+
+                if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and seleccionado == 1:
+                    if elegir == "<Pequeño>":
+                        elegir = "<Grande>"
+                    elif elegir == "<Mediano>":
+                        elegir = "<Pequeño>"
+                    else:
+                        elegir = "<Mediano>"
+
+                if evento.key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_a, pygame.K_d) and seleccionado == 2:
+                    if obstaculos == "<Con Obstaculos>":
+                        obstaculos = "<Sin Obstaculos>"
+                    else:
+                        obstaculos = "<Con Obstaculos>"
+
+                if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and seleccionado == 3:
+                    if elegirManzanas == 1:
+                        elegirManzanas = 5
+                    elif elegirManzanas == 5:
+                        elegirManzanas = 3
+                    else:
+                        elegirManzanas = 1
+                if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 3:
+                    if elegirManzanas == 1:
+                        elegirManzanas = 3
+                    elif elegirManzanas == 3:
+                        elegirManzanas = 5
+                    else:
+                        elegirManzanas = 1
+
+                if (evento.key == pygame.K_d or evento.key == pygame.K_RIGHT) and seleccionado == 4:
+                    if velocidad == "Medio":
+                        velocidad = "Rapido"
+                    elif velocidad == "Rapido":
+                        velocidad = "Lento"
+                    else:
+                        velocidad = "Medio"
+                if (evento.key == pygame.K_a or evento.key == pygame.K_LEFT) and seleccionado == 4:
+                    if velocidad == "Medio":
+                        velocidad = "Lento"
+                    elif velocidad == "Lento":
+                        velocidad = "Rapido"
+                    else:
+                        velocidad = "Medio"
+
+                if evento.key in (pygame.K_UP, pygame.K_w):
+                    if seleccionado > 1:
+                        seleccionado -= 1
+                    else:
+                        seleccionado = 5
+                if evento.key in (pygame.K_DOWN, pygame.K_s):
+                    if seleccionado < 5:
+                        seleccionado += 1
+                    else:
+                        seleccionado = 1
+
+            if evento.type == pygame.QUIT:
+                return 2
+
+        salir = "SALIR"
+
+
+        if seleccionado == 1:
+            texto_elegir_tam = font.render(elegir, True, morado_claro)
+        else:
+            texto_elegir_tam = font.render(elegir, True, morado)
+
+        if seleccionado == 2:
+            texto_elegir_obst = font.render(obstaculos, True, morado_claro)
+        else:
+            texto_elegir_obst = font.render(obstaculos, True, morado)
+
+        if seleccionado == 3:
+            texto_Manzanas = font.render(f"Manzanas: {elegirManzanas}", True, morado_claro)
+        else:
+            texto_Manzanas = font.render(f"Manzanas: {elegirManzanas}", True, morado)
+
+        if seleccionado == 4:
+            texto_Velocidad = font.render(f"Velocidad: {velocidad}", True, morado_claro)
+        else:
+            texto_Velocidad = font.render(f"Velocidad: {velocidad}", True, morado)
+
+        if seleccionado == 5:
+            texto_salir = font.render(salir, True, morado_claro)
+        else:
+            texto_salir = font.render(salir, True, morado)
+
+        with open("estadisticas.json", "r") as f:
+            estadisticas = json.load(f)
+            if clave in estadisticas:
+                partidas = estadisticas[clave][0]
+                ultima_partida = estadisticas[clave][1]
+                record = estadisticas[clave][2]
+
+            if clave in estadisticas:
+                texto_partidas = font.render(f"Patidas jugadas: {partidas}", True, rojo)
+                texto_ultima_partida = font.render(f"Ultima partida: {ultima_partida} manzanas", True, rojo)
+                texto_record = font.render(f"Record: {record} manzanas", True, rojo)
+            else:
+                texto_nojugado = font.render("No se ha jugado todavia", True, rojo)
+
+
+            if clave in estadisticas:
+                ventana.blit(texto_partidas, (160, 100))
+                ventana.blit(texto_ultima_partida, (110, 130))
+                ventana.blit(texto_record, (155, 160))
+            else:
+                ventana.blit(texto_nojugado, (150, 120))
+
+        snake = font.render("Snake", True, verde)
+        ventana.blit(snake, (260, 20))
+        ventana.blit(texto_Velocidad, (0, 400))
+        ventana.blit(texto_salir, (0, 450))
+        ventana.blit(texto_Manzanas, (0, 350))
+        ventana.blit(texto_elegir_tam, (0, 250))
+        ventana.blit(texto_elegir_obst, (0, 300))
+
+
+
+        pygame.display.flip()
+        reloj.tick(60)
+
+
 
 
 def main():
