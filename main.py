@@ -575,27 +575,33 @@ def ver_estadisticas(ventana):
         else:
             texto_salir = font.render(salir, True, morado)
 
-        with open("estadisticas.json", "r") as f:
-            estadisticas = json.load(f)
-            if clave in estadisticas:
-                partidas = estadisticas[clave][0]
-                ultima_partida = estadisticas[clave][1]
-                record = estadisticas[clave][2]
+        try:
+            with open("estadisticas.json", "r") as f:
+                estadisticas = json.load(f)
+                if clave in estadisticas:
+                    partidas = estadisticas[clave][0]
+                    ultima_partida = estadisticas[clave][1]
+                    record = estadisticas[clave][2]
 
-            if clave in estadisticas:
-                texto_partidas = font.render(f"Patidas jugadas: {partidas}", True, rojo)
-                texto_ultima_partida = font.render(f"Ultima partida: {ultima_partida} manzanas", True, rojo)
-                texto_record = font.render(f"Record: {record} manzanas", True, rojo)
-            else:
-                texto_nojugado = font.render("No se ha jugado todavia", True, rojo)
+                if clave in estadisticas:
+                    texto_partidas = font.render(f"Patidas jugadas: {partidas}", True, rojo)
+                    texto_ultima_partida = font.render(f"Ultima partida: {ultima_partida} manzanas", True, rojo)
+                    texto_record = font.render(f"Record: {record} manzanas", True, rojo)
+                else:
+                    texto_nojugado = font.render("No se ha jugado todavia", True, rojo)
 
 
-            if clave in estadisticas:
-                ventana.blit(texto_partidas, (160, 100))
-                ventana.blit(texto_ultima_partida, (110, 130))
-                ventana.blit(texto_record, (155, 160))
-            else:
-                ventana.blit(texto_nojugado, (150, 120))
+                if clave in estadisticas:
+                    ventana.blit(texto_partidas, (160, 100))
+                    ventana.blit(texto_ultima_partida, (110, 130))
+                    ventana.blit(texto_record, (155, 160))
+                else:
+                    ventana.blit(texto_nojugado, (150, 120))
+        except FileNotFoundError:
+            with open("estadisticas.json", "w") as f:
+                estadisticas = {}
+                json.dump(estadisticas, f, indent=4)
+
 
         snake = font.render("Snake", True, verde)
         ventana.blit(snake, (260, 20))
